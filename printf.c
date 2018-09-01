@@ -46,14 +46,14 @@
 #define PRINTF_FTOA_BUFFER_SIZE    32U
 
 // define this to support floating point (%f)
-#define PRINTF_SUPPORT_FLOAT
+//#define PRINTF_SUPPORT_FLOAT
 
 // define this to support long long types (%llu or %p)
-#define PRINTF_SUPPORT_LONG_LONG
+//#define PRINTF_SUPPORT_LONG_LONG
 
 // define this to support the ptrdiff_t type (%t)
 // ptrdiff_t is normally defined in <stddef.h> as long or long long type
-#define PRINTF_SUPPORT_PTRDIFF_T
+//#define PRINTF_SUPPORT_PTRDIFF_T
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -704,13 +704,24 @@ int vsnprintf(char* buffer, size_t count, const char* format, va_list va)
   return _vsnprintf(_out_buffer, buffer, count, format, va);
 }
 
+int vsprintf(char* buffer, const char* format, va_list va)
+{
+  return _vsnprintf(_out_buffer, buffer, (size_t)-1, format, va);
+}
+
+
+int vfctprintf(void (*out)(char character, void* arg), void* arg, const char* format, va_list va)
+{
+  const out_fct_wrap_type out_fct_wrap = { out, arg };
+  const int ret = _vsnprintf(_out_fct, (char*)&out_fct_wrap, (size_t)-1, format, va);
+  return ret;
+}
 
 int fctprintf(void (*out)(char character, void* arg), void* arg, const char* format, ...)
 {
   va_list va;
   va_start(va, format);
-  const out_fct_wrap_type out_fct_wrap = { out, arg };
-  const int ret = _vsnprintf(_out_fct, (char*)&out_fct_wrap, (size_t)-1, format, va);
+  const int ret = vfctprintf(out, arg, format, va);
   va_end(va);
   return ret;
 }
